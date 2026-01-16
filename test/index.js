@@ -9,8 +9,8 @@ test('works', async (t) => {
 
   const bes = new BlindEncryptionSodium(password)
 
-  const encryptedAndEncoded = await encrypt(encryptionKey, bes.encrypt.bind(bes))
-  const decrypted = await decrypt(encryptedAndEncoded, bes.decrypt.bind(bes))
+  const encryptedAndEncoded = await encrypt(encryptionKey, bes.encrypt)
+  const decrypted = await decrypt(encryptedAndEncoded, bes.decrypt)
 
   t.is(decrypted.toString('utf-8'), 'hello world')
 })
