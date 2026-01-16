@@ -22,12 +22,12 @@ const decrypted = await encryption.decrypt(encrypted)
 ### Usage with Autobase:
 
 ```js
-  const base = new Autobase(store, {
-    apply,
-    open,
-    encryptionKey,
-    blindEncryption: new BlindEncryptionSodium(entropy)
-  })
+const base = new Autobase(store, {
+  apply,
+  open,
+  encryptionKey,
+  blindEncryption: new BlindEncryptionSodium(entropy)
+})
 ```
 
 ## License
