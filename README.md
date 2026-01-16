@@ -30,6 +30,18 @@ const base = new Autobase(store, {
 })
 ```
 
+### Usage with encryption-encoding
+
+Internally, Autobase uses this with encryption-encoding
+
+```js
+const { encrypt, decrypt } = require('encryption-encoding')
+const BlindEncryptionSodium = require('blind-encryption-sodium')
+
+const encryptedAndEncoded = await encrypt(encryptionKey, bes.encrypt.bind(bes))
+const decrypted = await decrypt(encryptedAndEncoded, bes.decrypt.bind(bes))
+```
+
 ## License
 
 Apache-2.0
