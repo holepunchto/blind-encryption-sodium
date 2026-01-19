@@ -11,13 +11,18 @@ const b4a = require('b4a')
 const entropy = b4a.alloc(32) // 32-byte key
 // ... fill entropy
 
-const encryption = new BlindEncryptionSodium(entropy)
+const encryption = new BlindEncryptionSodium([{ key: entropy, type: 0 }])
 
 const encrypted = await encryption.encrypt(plaintext)
 // { value: <Buffer>, type: 1 }
 
 const decrypted = await encryption.decrypt(encrypted)
 ```
+
+Multiple values can be passed in. This enables you to "rotate" keys.
+* Value encrypted with an old `type` will be upgraded to the latest `type`
+* Cannot be downgraded
+* Old types are no longer needed after upgrade
 
 ### Usage with Autobase:
 
@@ -26,7 +31,10 @@ const base = new Autobase(store, {
   apply,
   open,
   encryptionKey,
-  blindEncryption: new BlindEncryptionSodium(entropy)
+  blindEncryption: new BlindEncryptionSodium([
+    { key: oldEntropy, type: 0 },
+    { key: newEntropy, type: 1 },
+  ])
 })
 ```
 
