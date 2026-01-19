@@ -14,22 +14,21 @@ class BlindEncryptionSodium {
     }
 
     this.decrypt = async ({ value, type }) => {
-      const entropy = this._entropies[0]
+      let entropy = this._entropies[0]
 
       // no backward compat
       if (type > entropy.type) throw new Error('Encrypted using new type: ' + type)
 
+      let rotated = false
+
       // auto upgrade
       if (type < entropy.type) {
-        const usedEntropy = this._entropies.find((e) => e.type === type)
-        if (!usedEntropy) throw new Error('Missing type: ' + type)
-
-        const decrypted = this._decrypt(value, usedEntropy.key)
-
-        return decrypted
+        entropy = this._entropies.find((e) => e.type === type)
+        if (!entropy) throw new Error('Missing type: ' + type)
+        rotated = true
       }
 
-      return this._decrypt(value, entropy.key)
+      return { value: this._decrypt(value, entropy.key), rotated }
     }
   }
 
