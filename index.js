@@ -33,6 +33,14 @@ class BlindEncryptionSodium {
   }
 
   _encrypt(value, entropy) {
+    if (!value || !value.byteLength) throw new TypeError('value must be a Uint8Array')
+    if (!entropy || entropy.byteLength !== sodium.crypto_secretbox_KEYBYTES) {
+      throw new Error('invalid key length')
+    }
+    if (value.byteLength < 32) {
+      throw new Error('value too short')
+    }
+
     const buffer = b4a.allocUnsafe(
       value.byteLength + sodium.crypto_secretbox_MACBYTES + sodium.crypto_secretbox_NONCEBYTES
     )
@@ -48,7 +56,7 @@ class BlindEncryptionSodium {
   _decrypt(value, entropy) {
     const nonce = value.subarray(0, sodium.crypto_secretbox_NONCEBYTES)
     const box = value.subarray(nonce.byteLength)
-    const output = b4a.allocUnsafe(box.byteLength - sodium.crypto_secretbox_MACBYTES)
+    const output = b4a.alloc(box.byteLength - sodium.crypto_secretbox_MACBYTES)
 
     sodium.crypto_secretbox_open_easy(output, box, nonce, entropy)
     return output

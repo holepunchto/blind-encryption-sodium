@@ -4,22 +4,22 @@ const { encrypt, decrypt } = require('encryption-encoding')
 const b4a = require('b4a')
 
 test('works', async (t) => {
-  const encryptionKey = b4a.from('hello world', 'utf-8')
-  const password = b4a.concat([b4a.from('my great password', 'utf-8')], 32)
+  const encryptionKey = b4a.alloc(40, 'hello world')
+  const password = b4a.alloc(32, 'my great password', 'utf-8')
 
   const bes = new BlindEncryptionSodium([{ key: password, type: 0 }])
 
   const encryptedAndEncoded = await encrypt(encryptionKey, bes.encrypt)
   const decrypted = await decrypt(encryptedAndEncoded, bes.decrypt)
 
-  t.is(decrypted.value.toString('utf-8'), 'hello world')
+  t.alike(decrypted.value, encryptionKey)
   t.is(decrypted.rotated, false)
 })
 
 test('rotation', async (t) => {
-  const encryptionKey = b4a.from('hello world', 'utf-8')
-  const password = b4a.concat([b4a.from('my great password', 'utf-8')], 32)
-  const newPassword = b4a.concat([b4a.from('my greater password', 'utf-8')], 32)
+  const encryptionKey = b4a.alloc(40, 'hello world')
+  const password = b4a.alloc(32, 'my great password', 'utf-8')
+  const newPassword = b4a.alloc(32, 'my greater password', 'utf-8')
 
   let encryptedAndEncoded
 
@@ -28,7 +28,7 @@ test('rotation', async (t) => {
 
     encryptedAndEncoded = await encrypt(encryptionKey, bes.encrypt)
     const decrypted = await decrypt(encryptedAndEncoded, bes.decrypt)
-    t.is(decrypted.value.toString('utf-8'), 'hello world')
+    t.alike(decrypted.value, encryptionKey)
     t.is(decrypted.rotated, false)
   }
 
@@ -45,7 +45,7 @@ test('rotation', async (t) => {
     ])
 
     const decrypted = await decrypt(encryptedAndEncoded, bes.decrypt)
-    t.is(decrypted.value.toString('utf-8'), 'hello world')
+    t.alike(decrypted.value, encryptionKey)
     t.is(decrypted.rotated, true)
 
     // upgraded
@@ -62,9 +62,40 @@ test('rotation', async (t) => {
     const bes = new BlindEncryptionSodium([{ key: newPassword, type: 1 }])
 
     const decrypted = await decrypt(encryptedAndEncoded, bes.decrypt)
-    t.is(decrypted.value.toString('utf-8'), 'hello world')
+    t.alike(decrypted.value, encryptionKey)
     t.is(decrypted.rotated, false)
 
     encryptedAndEncoded = await encrypt(encryptionKey, bes.encrypt)
+  }
+})
+
+test('bad value', async (t) => {
+  const encryptionKey = b4a.alloc(20, 'hello world')
+  const password = b4a.alloc(32, 'my great password', 'utf-8')
+
+  const bes = new BlindEncryptionSodium([{ key: password, type: 0 }])
+
+  await t.exception(() => encrypt(encryptionKey, bes.encrypt), /value too short/)
+})
+
+test('bad entropy', async (t) => {
+  const encryptionKey = b4a.alloc(40, 'hello world')
+  const password = b4a.alloc(20, 'my great password', 'utf-8')
+
+  const bes = new BlindEncryptionSodium([{ key: password, type: 0 }])
+
+  await t.exception(() => encrypt(encryptionKey, bes.encrypt), /invalid key length/)
+})
+
+test('bad value type', async (t) => {
+  const password = b4a.alloc(32, 'my great password', 'utf-8')
+  const bes = new BlindEncryptionSodium([{ key: password, type: 0 }])
+
+  const expected = new TypeError('value must be a Uint8Array')
+  try {
+    await encrypt('hello world', bes.encrypt)
+    t.fail('did not error')
+  } catch (e) {
+    t.alike(e, expected)
   }
 })
