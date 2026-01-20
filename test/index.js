@@ -12,7 +12,8 @@ test('works', async (t) => {
   const encryptedAndEncoded = await encrypt(encryptionKey, bes.encrypt)
   const decrypted = await decrypt(encryptedAndEncoded, bes.decrypt)
 
-  t.is(decrypted.toString('utf-8'), 'hello world')
+  t.is(decrypted.value.toString('utf-8'), 'hello world')
+  t.is(decrypted.rotated, false)
 })
 
 test('rotation', async (t) => {
@@ -27,7 +28,8 @@ test('rotation', async (t) => {
 
     encryptedAndEncoded = await encrypt(encryptionKey, bes.encrypt)
     const decrypted = await decrypt(encryptedAndEncoded, bes.decrypt)
-    t.is(decrypted.toString('utf-8'), 'hello world')
+    t.is(decrypted.value.toString('utf-8'), 'hello world')
+    t.is(decrypted.rotated, false)
   }
 
   // method missing to rotate
@@ -43,7 +45,8 @@ test('rotation', async (t) => {
     ])
 
     const decrypted = await decrypt(encryptedAndEncoded, bes.decrypt)
-    t.is(decrypted.toString('utf-8'), 'hello world')
+    t.is(decrypted.value.toString('utf-8'), 'hello world')
+    t.is(decrypted.rotated, true)
 
     // upgraded
     encryptedAndEncoded = await encrypt(encryptionKey, bes.encrypt)
@@ -51,8 +54,7 @@ test('rotation', async (t) => {
 
   t.exception(async () => {
     const bes = new BlindEncryptionSodium([{ key: password, type: 0 }])
-    const decrypted = await decrypt(encryptedAndEncoded, bes.decrypt)
-    t.is(decrypted.toString('utf-8'), 'hello world')
+    await decrypt(encryptedAndEncoded, bes.decrypt)
   }, /Encrypted using new type: 1/)
 
   // older version not needed use
@@ -60,7 +62,8 @@ test('rotation', async (t) => {
     const bes = new BlindEncryptionSodium([{ key: newPassword, type: 1 }])
 
     const decrypted = await decrypt(encryptedAndEncoded, bes.decrypt)
-    t.is(decrypted.toString('utf-8'), 'hello world')
+    t.is(decrypted.value.toString('utf-8'), 'hello world')
+    t.is(decrypted.rotated, false)
 
     encryptedAndEncoded = await encrypt(encryptionKey, bes.encrypt)
   }
