@@ -1,6 +1,6 @@
 {
   "name": "blind-encryption-sodium",
-  "version": "2.1.0",
+  "version": "3.0.0",
   "description": "Implemention of encryption encoding for Autobase blind encryption using sodium easy box",
   "main": "index.js",
   "exports": {
