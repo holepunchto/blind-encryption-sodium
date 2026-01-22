@@ -5,7 +5,7 @@ declare module 'blind-encryption-sodium' {
   }
 
   declare class BlindEncryptionSodium {
-    constructor(entropies: Array<Buffer>)
+    constructor(entropy: Buffer, oldEntropy?: Buffer)
     encrypt(key: Buffer): Promise<EncryptedData>
     decrypt(data: EncryptedData): Promise<Buffer>
   }
