@@ -2,40 +2,28 @@ const b4a = require('b4a')
 const sodium = require('sodium-universal')
 
 class BlindEncryptionSodium {
-  constructor(entropies) {
-    this._entropies = entropies.sort((a, b) => b.type - a.type)
-
+  constructor(entropy, oldEntropy) {
     this.encrypt = async (value) => {
-      // use latest
-      const entropy = this._entropies[0]
-      const buffer = this._encrypt(value, entropy.key)
+      const buffer = this._encrypt(value, entropy)
 
-      return { value: buffer, type: entropy.type }
+      return { value: buffer, type: 0 }
     }
 
-    this.decrypt = async ({ value, type }) => {
-      let entropy = this._entropies[0]
+    this.decrypt = async ({ value }) => {
+      const { output, ok } = this._decrypt(value, oldEntropy || entropy)
 
-      // no backward compat
-      if (type > entropy.type) throw new Error('Encrypted using new type: ' + type)
-
-      let rotated = false
-
-      // auto upgrade
-      if (type < entropy.type) {
-        entropy = this._entropies.find((e) => e.type === type)
-        if (!entropy) throw new Error('Missing type: ' + type)
-        rotated = true
+      if (!ok) {
+        throw new Error(`failed to rotate`)
       }
 
-      return { value: this._decrypt(value, entropy.key), rotated }
+      return { value: output, rotated: !!oldEntropy }
     }
   }
 
   _encrypt(value, entropy) {
     if (!value || !value.byteLength) throw new TypeError('value must be a Uint8Array')
     if (!entropy || entropy.byteLength !== sodium.crypto_secretbox_KEYBYTES) {
-      throw new Error('invalid key length')
+      throw new Error('invalid entropy length')
     }
     if (value.byteLength < 32) {
       throw new Error('value too short')
@@ -58,8 +46,8 @@ class BlindEncryptionSodium {
     const box = value.subarray(nonce.byteLength)
     const output = b4a.alloc(box.byteLength - sodium.crypto_secretbox_MACBYTES)
 
-    sodium.crypto_secretbox_open_easy(output, box, nonce, entropy)
-    return output
+    const ok = sodium.crypto_secretbox_open_easy(output, box, nonce, entropy)
+    return { output, ok }
   }
 }
 
