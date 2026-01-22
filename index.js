@@ -1,34 +1,38 @@
 const b4a = require('b4a')
 const sodium = require('sodium-universal')
+const isZero = require('is-zero-buffer')
 
 class BlindEncryptionSodium {
   constructor(entropies) {
-    this._entropies = entropies.sort((a, b) => b.type - a.type)
+    this._entropies = entropies
 
     this.encrypt = async (value) => {
       // use latest
-      const entropy = this._entropies[0]
+      const entropy = this._entropies[this._entropies.length - 1]
       const buffer = this._encrypt(value, entropy.key)
 
-      return { value: buffer, type: entropy.type }
+      return { value: buffer, type: 0 }
     }
 
-    this.decrypt = async ({ value, type }) => {
-      let entropy = this._entropies[0]
-
-      // no backward compat
-      if (type > entropy.type) throw new Error('Encrypted using new type: ' + type)
-
+    this.decrypt = async ({ value }) => {
+      let decrypted
       let rotated = false
 
-      // auto upgrade
-      if (type < entropy.type) {
-        entropy = this._entropies.find((e) => e.type === type)
-        if (!entropy) throw new Error('Missing type: ' + type)
-        rotated = true
+      for (let i = 0; i < this._entropies.length; i++) {
+        const res = this._decrypt(value, this._entropies[i].key)
+        if (isZero(res)) continue
+        decrypted = res
+        rotated = !b4a.equals(
+          this._entropies[i].key,
+          this._entropies[this._entropies.length - 1].key
+        )
       }
 
-      return { value: this._decrypt(value, entropy.key), rotated }
+      if (!decrypted) {
+        throw new Error('key missing')
+      }
+
+      return { value: decrypted, rotated }
     }
   }
 

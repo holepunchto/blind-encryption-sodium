@@ -47,6 +47,7 @@
   "homepage": "https://github.com/holepunchto/blind-encryption-sodium",
   "dependencies": {
     "b4a": "^1.7.3",
+    "is-zero-buffer": "^1.0.1",
     "sodium-universal": "^5.0.1"
   }
 }

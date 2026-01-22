@@ -36,7 +36,7 @@ test('rotation', async (t) => {
   t.exception(async () => {
     const bes = new BlindEncryptionSodium([{ key: newPassword, type: 1 }])
     await decrypt(encryptedAndEncoded, bes.decrypt)
-  }, /Missing type: 0/)
+  }, /key missing/)
 
   {
     const bes = new BlindEncryptionSodium([
@@ -55,7 +55,7 @@ test('rotation', async (t) => {
   t.exception(async () => {
     const bes = new BlindEncryptionSodium([{ key: password, type: 0 }])
     await decrypt(encryptedAndEncoded, bes.decrypt)
-  }, /Encrypted using new type: 1/)
+  }, /key missing/)
 
   // older version not needed use
   {
