@@ -10,7 +10,7 @@ const b4a = require('b4a')
 
 const key = b4a.alloc(32) // 32-byte key
 
-const encryption = new BlindEncryptionSodium([key])
+const encryption = new BlindEncryptionSodium(key)
 
 const encrypted = await encryption.encrypt(plaintext)
 // { value: <Buffer>, type: 1 }
@@ -33,7 +33,7 @@ const base = new Autobase(store, {
   apply,
   open,
   encryptionKey,
-  blindEncryption: new BlindEncryptionSodium([oldKey, newKey])
+  blindEncryption: new BlindEncryptionSodium(newKey, oldKey)
 })
 ```
 

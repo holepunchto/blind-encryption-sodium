@@ -2,33 +2,21 @@ const b4a = require('b4a')
 const sodium = require('sodium-universal')
 
 class BlindEncryptionSodium {
-  constructor(entropies) {
-    this._entropies = entropies
-
+  constructor(entropy, oldEntropy) {
     this.encrypt = async (value) => {
-      // use latest
-      const entropy = this._entropies[this._entropies.length - 1]
       const buffer = this._encrypt(value, entropy)
 
       return { value: buffer, type: 0 }
     }
 
     this.decrypt = async ({ value }) => {
-      let decrypted
-      let rotated = false
+      const { output, ok } = this._decrypt(value, oldEntropy || entropy)
 
-      for (let i = 0; i < this._entropies.length; i++) {
-        const { output, ok } = this._decrypt(value, this._entropies[i])
-        if (!ok) continue
-        decrypted = output
-        rotated = !b4a.equals(this._entropies[i], this._entropies[this._entropies.length - 1])
+      if (!ok) {
+        throw new Error(`failed to rotate`)
       }
 
-      if (!decrypted) {
-        throw new Error('entropy missing')
-      }
-
-      return { value: decrypted, rotated }
+      return { value: output, rotated: !!oldEntropy }
     }
   }
 
